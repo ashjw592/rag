@@ -47,6 +47,21 @@ python ingest.py
 python query.py <your query here>
 ```
 
+## Arguments
+
+```
+usage: query.py [-h] [--model MODEL] [--k K] [--show-context] query_text
+
+positional arguments:
+  query_text      The query text.
+
+options:
+  -h, --help      show this help message and exit
+  --model MODEL   The Ollama model to use.
+  --k K           The number of similar documents to retrieve.
+  --show-context  Whether to show the retrieved context.
+```
+
 ## Notes
 
 - The `ingest.py` script processes PDFs in the `data/` directory, extracts
