@@ -25,17 +25,20 @@ def main():
     parser.add_argument(
         "--model", type=str, default="mistral", help="The Ollama model to use."
     )
+    parser.add_argument(
+        "--k", type=int, default=5, help="The number of similar documents to retrieve."
+    )
     args = parser.parse_args()
     query_text = args.query_text
     model_name = args.model
     query_rag(query_text, model_name)
 
 
-def query_rag(query_text: str, model_name: str = "mistral") -> str:
+def query_rag(query_text: str, model_name: str = "mistral", k: int = 5) -> str:
     embedding_function = get_embedding_function()
     db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
 
-    results = db.similarity_search_with_score(query_text, k=5)
+    results = db.similarity_search_with_score(query_text, k=k)
 
     context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
     prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
