@@ -28,19 +28,30 @@ def main():
     parser.add_argument(
         "--k", type=int, default=5, help="The number of similar documents to retrieve."
     )
+    parser.add_argument(
+        "--show-context",
+        action="store_true",
+        help="Whether to show the retrieved context.",
+    )
     args = parser.parse_args()
     query_text = args.query_text
+    k = args.k
     model_name = args.model
-    query_rag(query_text, model_name)
+    show_context = args.show_context
+    query_rag(query_text, model_name, k, show_context)
 
 
-def query_rag(query_text: str, model_name: str = "mistral", k: int = 5) -> str:
+def query_rag(
+    query_text: str, model_name: str = "mistral", k: int = 5, show_context: bool = False
+) -> str:
     embedding_function = get_embedding_function()
     db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
 
     results = db.similarity_search_with_score(query_text, k=k)
 
     context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
+    if show_context:
+        print(f"Context:\n{context_text}\n\n---\n\n")
     prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
     prompt = prompt_template.format(context=context_text, question=query_text)
 
