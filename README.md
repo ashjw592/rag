@@ -47,6 +47,14 @@ python ingest.py
 python query.py <your query here>
 ```
 
+8. Run the API + UI
+
+```bash
+uvicorn app.main:app --reload
+```
+
+Open http://localhost:8000 to use the chat UI.
+
 ## Arguments
 
 ```

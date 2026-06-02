@@ -1,0 +1,35 @@
+# Python bytecode & caches
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+
+# Virtual environments
+venv/
+.venv/
+
+# Environment files
+.env
+.env.*
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Local data & vector store outputs
+data/
+chroma/
+
+# Editor settings
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
