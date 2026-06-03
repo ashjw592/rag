@@ -1,32 +1,20 @@
 import argparse
 
-from langchain_chroma import Chroma
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_ollama import OllamaLLM
-
-from ingest import get_embedding_function
-
-CHROMA_PATH = "chroma"
-
-PROMPT_TEMPLATE = """
-Answer the question based only on the following context. If you don't know the answer, say you don't know.
-
-{context}
-
----
-
-Answer the question based on the above context: {question}
-"""
+from app.core.config import DEFAULT_LLM_MODEL, DEFAULT_TOP_K
+from app.services.rag_service import RagService
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("query_text", type=str, help="The query text.")
     parser.add_argument(
-        "--model", type=str, default="mistral", help="The Ollama model to use."
+        "--model", type=str, default=DEFAULT_LLM_MODEL, help="The Ollama model to use."
     )
     parser.add_argument(
-        "--k", type=int, default=5, help="The number of similar documents to retrieve."
+        "--k",
+        type=int,
+        default=DEFAULT_TOP_K,
+        help="The number of similar documents to retrieve.",
     )
     parser.add_argument(
         "--show-context",
@@ -42,26 +30,24 @@ def main():
 
 
 def query_rag(
-    query_text: str, model_name: str = "mistral", k: int = 5, show_context: bool = False
+    query_text: str,
+    model_name: str = DEFAULT_LLM_MODEL,
+    k: int = DEFAULT_TOP_K,
+    show_context: bool = False,
 ) -> str:
-    embedding_function = get_embedding_function()
-    db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
+    rag_service = RagService()
+    result = rag_service.generate_reply(
+        message=query_text,
+        model_name=model_name,
+        k=k,
+        include_context=show_context,
+    )
+    if show_context and result.context:
+        print(f"Context:\n{result.context}\n\n---\n\n")
 
-    results = db.similarity_search_with_score(query_text, k=k)
-
-    context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
-    if show_context:
-        print(f"Context:\n{context_text}\n\n---\n\n")
-    prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
-    prompt = prompt_template.format(context=context_text, question=query_text)
-
-    model = OllamaLLM(model=model_name)
-    response_text = model.invoke(prompt)
-
-    sources = [doc.metadata.get("id", None) for doc, _score in results]
-    formatted_response = f"Response: {response_text}\n\nSources: {sources}"
+    formatted_response = f"Response: {result.reply}\n\nSources: {result.sources}"
     print(formatted_response)
-    return response_text
+    return result.reply
 
 
 if __name__ == "__main__":

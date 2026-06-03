@@ -14,5 +14,5 @@ def chat(
     payload: ChatRequest,
     rag_service: RagService = Depends(get_rag_service),
 ) -> ChatResponse:
-    reply = rag_service.generate_reply(payload.message)
-    return ChatResponse(reply=reply)
+    result = rag_service.generate_reply(payload.message)
+    return ChatResponse(reply=result.reply)

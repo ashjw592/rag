@@ -5,7 +5,7 @@ const API_BASE = "/api";
  * The response is intentionally small to keep the UI fast and predictable.
  */
 export async function sendChatMessage(message) {
-  const response = await fetch(`${API_BASE}/chat`, {
+  const response = await fetch(`${API_BASE}/chat/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ message }),
