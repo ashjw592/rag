@@ -18,6 +18,7 @@ function App() {
   async function handleSubmit(event) {
     event.preventDefault();
     const trimmed = input.trim();
+    console.log("Submitting message:", trimmed);
 
     if (!trimmed || isSending) {
       return;
@@ -31,8 +32,13 @@ function App() {
 
     try {
       const response = await sendChatMessage(trimmed);
-      setMessages((prev) => [...prev, { role: "assistant", content: response.reply }]);
+      console.log("Received response:", response);
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: response.reply },
+      ]);
     } catch (err) {
+      console.error("Full error:", err);
       setError(err?.message ?? "Something went wrong.");
     } finally {
       setIsSending(false);
@@ -41,7 +47,11 @@ function App() {
 
   const transcript =
     messages.length === 0
-      ? h("div", { className: "empty" }, "No messages yet. Ask a question to begin.")
+      ? h(
+          "div",
+          { className: "empty" },
+          "No messages yet. Ask a question to begin.",
+        )
       : messages.map((message, index) =>
           h(
             "div",
@@ -49,8 +59,8 @@ function App() {
               key: `${message.role}-${index}`,
               className: `message message--${message.role}`,
             },
-            message.content
-          )
+            message.content,
+          ),
         );
 
   return h(
@@ -60,7 +70,11 @@ function App() {
       "header",
       { className: "header" },
       h("h1", null, "RAG Chat"),
-      h("p", null, "Ask questions about the PDFs you ingest into the vector store.")
+      h(
+        "p",
+        null,
+        "Ask questions about the PDFs you ingest into the vector store.",
+      ),
     ),
     h("section", { className: "chat", "aria-live": "polite" }, transcript),
     h(
@@ -78,15 +92,15 @@ function App() {
       h(
         "button",
         { type: "submit", disabled: isSending || !input.trim() },
-        isSending ? "Sending..." : "Send"
-      )
+        isSending ? "Sending..." : "Send",
+      ),
     ),
     h(
       "footer",
       { className: "status" },
       h("span", null, h("strong", null, "Status:"), ` ${statusText}`),
-      error ? h("span", { className: "error" }, error) : null
-    )
+      error ? h("span", { className: "error" }, error) : null,
+    ),
   );
 }
 
