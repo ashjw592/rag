@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import AsyncIterator, List, Optional
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama import ChatOllama
@@ -74,3 +74,29 @@ class RagService:
             sources=cleaned_sources,
             context=context_text if include_context else None,
         )
+
+    async def stream_reply(
+        self,
+        message: str,
+        model_name: str = DEFAULT_LLM_MODEL,
+        k: int = DEFAULT_TOP_K,
+    ) -> AsyncIterator[str]:
+        loop = asyncio.get_event_loop()
+
+        def retrieve():
+            db = get_vector_store()
+            return db.similarity_search_with_score(message, k=k)
+
+        results = await loop.run_in_executor(None, retrieve)
+        context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
+        prompt = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
+        formatted_prompt = prompt.format(context=context_text, question=message)
+
+        model = ChatOllama(
+            model=model_name,
+            base_url=OLLAMA_BASE_URL,
+            num_predict=OLLAMA_MAX_TOKENS,
+        )
+
+        async for chunk in model.astream(formatted_prompt):
+            yield chunk.content

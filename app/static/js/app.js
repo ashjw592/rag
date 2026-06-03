@@ -1,7 +1,6 @@
 // React is loaded via ESM so the UI works without a build step.
 import React from "https://esm.sh/react@18";
 import { createRoot } from "https://esm.sh/react-dom@18/client";
-
 import { sendChatMessage } from "./api.js";
 
 const { useState } = React;
@@ -18,28 +17,30 @@ function App() {
   async function handleSubmit(event) {
     event.preventDefault();
     const trimmed = input.trim();
-    console.log("Submitting message:", trimmed);
-
     if (!trimmed || isSending) {
       return;
     }
-
     setIsSending(true);
     setError("");
     setInput("");
-
     setMessages((prev) => [...prev, { role: "user", content: trimmed }]);
+    setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
     try {
-      const response = await sendChatMessage(trimmed);
-      console.log("Received response:", response);
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: response.reply },
-      ]);
+      await sendChatMessage(trimmed, (chunk) => {
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1] = {
+            role: "assistant",
+            content: updated[updated.length - 1].content + chunk,
+          };
+          return updated;
+        });
+      });
     } catch (err) {
       console.error("Full error:", err);
       setError(err?.message ?? "Something went wrong.");
+      setMessages((prev) => prev.slice(0, -1));
     } finally {
       setIsSending(false);
     }

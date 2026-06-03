@@ -29,3 +29,17 @@ async def chat(
         return ChatResponse(
             reply="Sorry, something went wrong while processing your message."
         )
+
+
+from fastapi.responses import StreamingResponse
+
+
+@router.post("/stream")
+async def chat_stream(
+    payload: ChatRequest,
+    rag_service: RagService = Depends(get_rag_service),
+):
+    return StreamingResponse(
+        rag_service.stream_reply(payload.message),
+        media_type="text/plain",
+    )
